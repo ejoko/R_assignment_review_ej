@@ -1,0 +1,115 @@
+---
+title: "Readme"
+author: "Manuela Chaves"
+date: "2024-03-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+# Part 1. Data inspection
+
+During this R assignment, two raw genomic data files (“fang _et_al_genotypes.txt” and “snp_position.txt”) were subjected to a file inspection process through Rstudio, to describe and understand the kind of data we are dealing with.
+
+## files:
+fang_et_al_genotypes.txt: a published SNP data set including maize, teosinte (i.e., wild maize), and Tripsacum (a close outgroup to the genus Zea) individuals.
+
+snp_position.txt: an additional data file that includes the SNP id (first column), chromosome location (third column), nucleotide location (fourth column) and other information for the SNPs genotyped in the fang_et_al_genotypes.txt file.
+
+## Reading .txt files:
+The following command chunk will load a program that allows to read .txt files and will upload them to the working space. You can either use either $ print or $ view to visualize the data.
+```{r read txt}
+#install.packages("readr")
+library(readr)
+fang <- read_delim("C:/Users/mchavesm/Box/Rass/R_assignment/fang_et_al_genotypes.txt", show_col_types = FALSE)
+snp <- read_delim("C:/Users/mchavesm/Box/Rass/R_assignment/snp_position.txt", show_col_types = FALSE)
+print(fang)
+print(snp)
+```
+
+Use the following command lines to inspect the data:
+View data structure:
+$ dim() provides information on 
+$ str() display structure of the data
+$ summary() summary statistics, such as mean and quartiles
+
+view data head/tail
+head()
+tail()
+
+Check column names
+names()
+
+Check missing values in each column
+colSums(is.na(data))
+
+check unique values
+
+
+Fang:
+number of rows = 2782 and columns = 986 
+Data structure shows character type (col_character). 
+The summary command is not very useful for the Fang file since it recognizes the data as characters.
+Tail and head will display part of the data nicely organized in a printed data frame (tibble)
+We can check the names of all the columns in the file with names()
+
+To check for missing values in the Fang file we could use $ colSums(is.na(fang)), which will return a logical matrix of the same dimensions of the file, and sums the TRUE values in each column, TRUE meaning NA. This command returns all 0, meaning all FALSE (not NA). However, we know from the previous UNIX assignment, that the missing data in Fang is delimited as "?/?", in which case we can use na_fang <- grepl("?/?", fang, ignore.case = TRUE), which will create a data frame with insensitive search, meaning any combination of the missing value. This time we get that there is at least 1 missing data in every column (all TRUE values).
+
+From this genotype data, I am interested in knowning how many columns have our genotypes of interest (ZMM for maize and ZMP for Teosinte), 
+
+maize, teosinte (i.e., wild maize), and Tripsacum (a close outgroup to the genus Zea) individuals.
+
+Snp:
+number of rows = 983 and columns = 15
+Data structure includes characters (col_character) and numeric (col_double) types.
+Summary shows statistics for numeric columns.
+Tail and head will display part of the data nicely organized in a printed data frame (tibble)
+We can check the names of all the columns in the file with names()
+
+Missing values in the SNP file are delimited by NA, in this case we can use the colSums(is.na(snp)) command, and it will return quickly the count of missing data and the column. However this command is sensitive, meaning that if there is any NA value in different notation, the command will not count it. Thus, we can use the na_snp <- grepl("NA", snp, ignore.case = TRUE) to be sure of the missing data results.
+
+# Read the column names from your file
+column_names <- colnames(your_data_frame)
+
+# Count the number of columns with the prefix "PZA"
+pza_columns <- grep("^PZA", column_names)
+number_of_pza_columns <- length(pza_columns)
+
+# Print the result
+print(number_of_pza_columns)
+
+
+
+```{r inspection}
+dim(fang)
+str(fang)
+summary(fang)
+names(fang)
+
+dim(snp)
+str(snp)
+summary(snp)
+names(snp)
+```

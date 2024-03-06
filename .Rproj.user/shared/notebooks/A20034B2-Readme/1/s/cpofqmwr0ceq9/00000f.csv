@@ -1,0 +1,5 @@
+"0","#install.packages(""readr"")"
+"0","library(readr)"
+"0","fang <- read_delim(""C:/Users/mchavesm/Box/Rass/R_assignment/fang_et_al_genotypes.txt"", show_col_types = FALSE)"
+"0","snp <- read_delim(""C:/Users/mchavesm/Box/Rass/R_assignment/snp_position.txt"", show_col_types = FALSE)"
+"0","print(fang)"
