@@ -43,12 +43,13 @@ The following command chunk will load a program that allows to read .txt files a
 ```{r read txt}
 #install.packages("readr")
 library(readr)
-fang <- read_delim("C:/Users/mchavesm/Box/Rass/R_assignment/fang_et_al_genotypes.txt", show_col_types = FALSE)
-snp <- read_delim("C:/Users/mchavesm/Box/Rass/R_assignment/snp_position.txt", show_col_types = FALSE)
+fang <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/fang_et_al_genotypes.txt", header = TRUE)
+snp <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_position.txt", header = TRUE)
 print(fang)
 print(snp)
 ```
 
+## Attributes of the Fang et al & SNP files
 Use the following command lines to inspect the data:
 View data structure:
 $ dim() provides information on 
@@ -77,9 +78,25 @@ We can check the names of all the columns in the file with names()
 
 To check for missing values in the Fang file we could use $ colSums(is.na(fang)), which will return a logical matrix of the same dimensions of the file, and sums the TRUE values in each column, TRUE meaning NA. This command returns all 0, meaning all FALSE (not NA). However, we know from the previous UNIX assignment, that the missing data in Fang is delimited as "?/?", in which case we can use na_fang <- grepl("?/?", fang, ignore.case = TRUE), which will create a data frame with insensitive search, meaning any combination of the missing value. This time we get that there is at least 1 missing data in every column (all TRUE values).
 
-From this genotype data, I am interested in knowning how many columns have our genotypes of interest (ZMM for maize and ZMP for Teosinte), 
+From this genotype data, I am interested in knowing how many columns have our genotypes of interest (ZMM for maize and ZMP for Teosinte), then I am using the following command lines:
 
-maize, teosinte (i.e., wild maize), and Tripsacum (a close outgroup to the genus Zea) individuals.
+```{r inspection}
+
+# Read the data from your text file
+data <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/fang_et_al_genotypes.txt", header = TRUE)
+
+# Extract the specific column by its index (assuming it's the third column)
+column_3 <- data[, 3]
+
+# Count the number of rows that contain the prefix "ZMM"
+count_ZMM <- sum(grepl("^ZMM", column_3))
+count_ZMP <- sum(grepl("^ZMP", column_3))
+# Print the result
+print(count_ZMM)
+print(count_ZMP)
+```
+Then, we have 1573 rows with the group ZMM and 975 rows with the group ZMP.
+
 
 Snp:
 number of rows = 983 and columns = 15
@@ -89,17 +106,6 @@ Tail and head will display part of the data nicely organized in a printed data f
 We can check the names of all the columns in the file with names()
 
 Missing values in the SNP file are delimited by NA, in this case we can use the colSums(is.na(snp)) command, and it will return quickly the count of missing data and the column. However this command is sensitive, meaning that if there is any NA value in different notation, the command will not count it. Thus, we can use the na_snp <- grepl("NA", snp, ignore.case = TRUE) to be sure of the missing data results.
-
-# Read the column names from your file
-column_names <- colnames(your_data_frame)
-
-# Count the number of columns with the prefix "PZA"
-pza_columns <- grep("^PZA", column_names)
-number_of_pza_columns <- length(pza_columns)
-
-# Print the result
-print(number_of_pza_columns)
-
 
 
 ```{r inspection}
@@ -113,3 +119,99 @@ str(snp)
 summary(snp)
 names(snp)
 ```
+
+
+# Part 2: Data processing
+
+## extracting data
+The following chunk is used to extract specifically the Maize (ZMM) and Teosinte (ZMP) groups along with the SNP_ID (in columns) of the Fang file. Finally, I saved the new data into a new file called zmm.txt/zmp.txt.
+
+```{r inspection}
+# Subset the data frame to include only rows where the specific column contains the "ZMM" group
+zmm_group <- fang[grep("^ZMM", fang$Group),]
+# Extract columns from the Group genotype 3 to 986
+zmm_columns <- zmm_group[, 3:986]
+# Write the extracted data to a new file
+write.table(zmm_columns, file = "zmm.txt", row.names = TRUE)
+
+#do the same for the ZMP group
+# Subset the data frame to include only rows where the specific column contains the "ZMP" group
+zmp_group <- fang[grep("^ZMP", fang$Group),]
+# Extract columns from the Group genotype 3 to 986
+zmp_columns <- zmp_group[, 3:986]
+# Write the extracted data to a new file
+write.table(zmp_columns, file = "zmp.txt", row.names = FALSE)
+```
+
+## Transposing data
+Next thing we need to do is to transpose the columns that contain the SNP_ID into rows.
+It is naturally in increasing position and missing data ?/? default. To check I used further commands. Can't use that command in matrix array then we convert the data into a data frame. Result is TRUE, meaning it is already in increasing order.
+```{r inspection}
+# transposing the data file
+t_zmm <- t(zmm_columns)
+# print the file
+print(t_zmm)
+
+# Convert t_zmm to a data frame if necessary
+if (!is.data.frame(t_zmm)) {
+  t_zmm <- as.data.frame(t_zmm)
+}
+
+# Check if the data in column_1 is ordered increasingly
+is_increasing1 <- all(diff(t_zmm$column_1) >= 0)
+
+# Print the result
+print(is_increasing1)
+
+#repeat for Teosinte
+
+# transposing the data file
+t_zmp <- t(zmp_columns)
+# print the file
+print(t_zmp)
+
+if (!is.data.frame(t_zmp)) {t_zmp <- as.data.frame(t_zmp)}
+is_increasing2 <- all(diff(t_zmp$column_1) >= 0)
+print(is_increasing2)
+
+#save the transposed data into .txt
+write.table(t_zmm, file = "t_zmm.txt", row.names = TRUE)
+write.table(t_zmp, file = "t_zmp.txt", row.names = FALSE)
+```
+
+## Data extraction
+Now we need to prepare the SNP file. We need to get columns 1, 2, and 3 for SNP_ID, Chromosome and Position respectively. 
+
+```{r inspection}
+# Extract the indices of columns matching the pattern
+extracted_columns <- snp[, c(1, 3, 4)]
+# Write the extracted data to a new file
+write.table(extracted_columns, file = "snp_columns.txt", row.names = FALSE)
+#when opening use header TRUE = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_columns.txt", header = TRUE)
+print(extracted_columns)
+
+# we could also use 
+column_snp <- grep("SNP_ID|Chromosome|Position", colnames(snp))
+# Extract the columns based on the indices
+extracted_columns <- snp[, column_snp]
+# Print the entire content of the extracted columns
+print(extracted_columns)
+
+```
+
+Now we need to merge the files snp_columns.txt with the transpose data for Maize (zmm.txt) and Teosinte (zmp.txt).
+```{r inspection}
+# Read data from the first text file
+snp_ready <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_columns.txt", header = TRUE)
+# Read data from the second text file
+zmm_ready <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/t_zmm.txt", header = FALSE)
+zmp_ready <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/t_zmp.txt", header = TRUE)
+# Merge the two data frames by column (assuming they have the same number of rows)
+merged_data <- cbind(data1, data2)
+
+# Write the merged data to a new text file
+write.table(merged_data, file = "merged_file.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+```
+
+
