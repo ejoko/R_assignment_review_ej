@@ -5,30 +5,6 @@ date: "2024-03-05"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
 # Part 1. Data inspection
 
 During this R assignment, two raw genomic data files (“fang _et_al_genotypes.txt” and “snp_position.txt”) were subjected to a file inspection process through Rstudio, to describe and understand the kind of data we are dealing with.
@@ -39,158 +15,133 @@ fang_et_al_genotypes.txt: a published SNP data set including maize, teosinte (i.
 snp_position.txt: an additional data file that includes the SNP id (first column), chromosome location (third column), nucleotide location (fourth column) and other information for the SNPs genotyped in the fang_et_al_genotypes.txt file.
 
 ## Reading .txt files:
-The following command chunk will load a program that allows to read .txt files and will upload them to the working space. You can either use either $ print or $ view to visualize the data.
+
+* The following command chunk will load a program that allows to read ".txt" files and will upload them to the working space. 
+* The package "readr" needs to be installed the first time to read the text files in R.
+* Change the path directory to your corresponding directory
+
 ```{r read txt}
 #install.packages("readr")
 library(readr)
 fang <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/fang_et_al_genotypes.txt", header = TRUE)
-snp <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_position.txt", header = TRUE)
+snp <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_position.txt", header = TRUE, sep = "\t")
 print(fang)
 print(snp)
 ```
 
 ## Attributes of the Fang et al & SNP files
-Use the following command lines to inspect the data:
-View data structure:
-$ dim() provides information on 
-$ str() display structure of the data
-$ summary() summary statistics, such as mean and quartiles
 
-view data head/tail
-head()
-tail()
-
-Check column names
-names()
-
-Check missing values in each column
-colSums(is.na(data))
-
-check unique values
-
-
-Fang:
-number of rows = 2782 and columns = 986 
-Data structure shows character type (col_character). 
-The summary command is not very useful for the Fang file since it recognizes the data as characters.
-Tail and head will display part of the data nicely organized in a printed data frame (tibble)
-We can check the names of all the columns in the file with names()
-
-To check for missing values in the Fang file we could use $ colSums(is.na(fang)), which will return a logical matrix of the same dimensions of the file, and sums the TRUE values in each column, TRUE meaning NA. This command returns all 0, meaning all FALSE (not NA). However, we know from the previous UNIX assignment, that the missing data in Fang is delimited as "?/?", in which case we can use na_fang <- grepl("?/?", fang, ignore.case = TRUE), which will create a data frame with insensitive search, meaning any combination of the missing value. This time we get that there is at least 1 missing data in every column (all TRUE values).
-
-From this genotype data, I am interested in knowing how many columns have our genotypes of interest (ZMM for maize and ZMP for Teosinte), then I am using the following command lines:
+* The following chunk shows the commands I used to inspect the data:
 
 ```{r inspection}
+#Inspecting the Fang file
 
-# Read the data from your text file
-data <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/fang_et_al_genotypes.txt", header = TRUE)
+dim(fang) #dimensions of the file
+str(fang) #structure of the file
+summary(fang) # statistic summary 
+names(fang) #shows names of all columns in file
+head(fang) #shows first lines of file
+tail(fang) #shows last lines of file
+na_fang <- grepl("?/?", fang, ignore.case = TRUE) #check for missing values
 
-# Extract the specific column by its index (assuming it's the third column)
+#Inspecting the SNP file
+dim(snp)
+str(snp)
+summary(snp)
+names(snp)
+head(snp)
+tail(snp)
+na_snp <- grepl("NA", snp, ignore.case = TRUE) 
+```
+
+### Assessing inspection
+
+1. Fang:
+* Number of rows = 2782 and columns = 986
+* Data structure shows character type (col_character). 
+* The summary command is not very useful for the Fang file since it recognizes the data as characters.
+* Tail and head will display part of the data nicely organized in a printed data frame (tibble)
+* We can check the names of all the columns in the file with "names()"
+* To check for missing values in the Fang file we could use $ colSums(is.na(fang)), which will return a logical matrix of the same dimensions of the file, and sums the TRUE values in each column, TRUE meaning NA. This command returns all 0, meaning all FALSE (not NA). However, we know from the previous UNIX assignment, that the missing data in Fang is delimited as "?/?", in which case we can use na_fang <- grepl("?/?", fang, ignore.case = TRUE), which will create a data frame with insensitive search, meaning any combination of the missing value. This time we get that there is at least 1 missing data in every column (all TRUE values).
+* From this genotype data, I am interested in knowing how many columns have our genotypes of interest (ZMM for maize and ZMP for Teosinte), then I am using the following command lines, we get 1573 rows with the group ZMM and 975 rows with the group ZMP.
+
+```{r inspection}
+# Extract the specific column
 column_3 <- data[, 3]
-
-# Count the number of rows that contain the prefix "ZMM"
+# Count the number of rows that contain the prefix "ZMM" or "ZMP"
 count_ZMM <- sum(grepl("^ZMM", column_3))
 count_ZMP <- sum(grepl("^ZMP", column_3))
 # Print the result
 print(count_ZMM)
 print(count_ZMP)
 ```
-Then, we have 1573 rows with the group ZMM and 975 rows with the group ZMP.
 
 
-Snp:
-number of rows = 983 and columns = 15
-Data structure includes characters (col_character) and numeric (col_double) types.
-Summary shows statistics for numeric columns.
-Tail and head will display part of the data nicely organized in a printed data frame (tibble)
-We can check the names of all the columns in the file with names()
-
-Missing values in the SNP file are delimited by NA, in this case we can use the colSums(is.na(snp)) command, and it will return quickly the count of missing data and the column. However this command is sensitive, meaning that if there is any NA value in different notation, the command will not count it. Thus, we can use the na_snp <- grepl("NA", snp, ignore.case = TRUE) to be sure of the missing data results.
-
-
-```{r inspection}
-dim(fang)
-str(fang)
-summary(fang)
-names(fang)
-
-dim(snp)
-str(snp)
-summary(snp)
-names(snp)
-```
+2. SNP:
+* Number of rows = 983 and columns = 15
+* Data structure includes characters (col_character) and numeric (col_double) types.
+* Summary shows statistics for numeric columns.
+* Tail and head will display part of the data nicely organized in a printed data frame (tibble)
+* We can check the names of all the columns in the file with names()
+* Missing values in the SNP file are delimited by NA, in this case we can use the colSums(is.na(snp)) command, and it will return quickly the count of missing data and the column. However this command is sensitive, meaning that if there is any NA value in different notation, the command will not count it. Thus, we can use the na_snp <- grepl("NA", snp, ignore.case = TRUE) to be sure of the missing data results.
 
 
-# Part 2: Data processing
+# Part 2. Data processing
 
-## extracting data
-The following chunk is used to extract specifically the Maize (ZMM) and Teosinte (ZMP) groups along with the SNP_ID (in columns) of the Fang file. Finally, I saved the new data into a new file called zmm.txt/zmp.txt.
+## Extracting data
+The following chunk is used to extract specifically the Maize (ZMM) and Teosinte (ZMP) groups along with the SNP_ID (in columns) of the Fang file. Finally, I saved the new data into a new file called zmm.txt/zmp.txt for further analysis. 
 
-```{r inspection}
+```{r data extraction}
 # Subset the data frame to include only rows where the specific column contains the "ZMM" group
 zmm_group <- fang[grep("^ZMM", fang$Group),]
-# Extract columns from the Group genotype 3 to 986
-zmm_columns <- zmm_group[, 3:986]
+# Extract columns from the Group genotype selected from column 3 to 986
+zmm_columns <- zmm_group[, 3:986, drop = FALSE]
 # Write the extracted data to a new file
-write.table(zmm_columns, file = "zmm.txt", row.names = TRUE)
+write.table(zmm_columns, file = "zmm.txt", row.names = FALSE)
 
-#do the same for the ZMP group
+# Do the same for the ZMP group
 # Subset the data frame to include only rows where the specific column contains the "ZMP" group
 zmp_group <- fang[grep("^ZMP", fang$Group),]
 # Extract columns from the Group genotype 3 to 986
-zmp_columns <- zmp_group[, 3:986]
+zmp_columns <- zmp_group[, 3:986, drop = FALSE]
 # Write the extracted data to a new file
 write.table(zmp_columns, file = "zmp.txt", row.names = FALSE)
 ```
 
 ## Transposing data
-Next thing we need to do is to transpose the columns that contain the SNP_ID into rows.
-It is naturally in increasing position and missing data ?/? default. To check I used further commands. Can't use that command in matrix array then we convert the data into a data frame. Result is TRUE, meaning it is already in increasing order.
-```{r inspection}
-# transposing the data file
-t_zmm <- t(zmm_columns)
-# print the file
-print(t_zmm)
+* Next thing we need to do is to transpose the columns that contain the SNP_ID into rows.
 
-# Convert t_zmm to a data frame if necessary
-if (!is.data.frame(t_zmm)) {
-  t_zmm <- as.data.frame(t_zmm)
-}
+```{r transposing}
+# Transposing the Fang file: Maize
+# Read the data file
+zmm_to_trans <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/zmm.txt", header = TRUE)
+# Transposing the Fang file: Maize
+t_zmm <- t(zmm_to_trans)
+# Save the transposed data into a new file with no column headers
+write.table(t_zmm, file = "transposed_zmm.txt", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+# You can open the file with
+transposed_zmm <- read.table("transposed_zmm.txt", header = TRUE)
 
-# Check if the data in column_1 is ordered increasingly
-is_increasing1 <- all(diff(t_zmm$column_1) >= 0)
+# Transposing the Fang file: Teosinte
+zmp_to_trans <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/zmp.txt", header = TRUE)
+t_zmp <- t(zmp_to_trans)
+write.table(t_zmp, file = "transposed_zmp.txt", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+transposed_zmp <- read.table("transposed_zmp.txt", header = TRUE)
 
-# Print the result
-print(is_increasing1)
-
-#repeat for Teosinte
-
-# transposing the data file
-t_zmp <- t(zmp_columns)
-# print the file
-print(t_zmp)
-
-if (!is.data.frame(t_zmp)) {t_zmp <- as.data.frame(t_zmp)}
-is_increasing2 <- all(diff(t_zmp$column_1) >= 0)
-print(is_increasing2)
-
-#save the transposed data into .txt
-write.table(t_zmm, file = "t_zmm.txt", row.names = TRUE)
-write.table(t_zmp, file = "t_zmp.txt", row.names = FALSE)
 ```
 
 ## Data extraction
 Now we need to prepare the SNP file. We need to get columns 1, 2, and 3 for SNP_ID, Chromosome and Position respectively. 
 
-```{r inspection}
+```{r data extraction}
 # Extract the indices of columns matching the pattern
 extracted_columns <- snp[, c(1, 3, 4)]
 # Write the extracted data to a new file
 write.table(extracted_columns, file = "snp_columns.txt", row.names = FALSE)
-#when opening use header TRUE = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_columns.txt", header = TRUE)
-print(extracted_columns)
+# Open file 
+snp_columns = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_columns.txt", header = TRUE)
 
-# we could also use 
+# Another way to do it with the grep command 
 column_snp <- grep("SNP_ID|Chromosome|Position", colnames(snp))
 # Extract the columns based on the indices
 extracted_columns <- snp[, column_snp]
@@ -199,19 +150,139 @@ print(extracted_columns)
 
 ```
 
-Now we need to merge the files snp_columns.txt with the transpose data for Maize (zmm.txt) and Teosinte (zmp.txt).
-```{r inspection}
-# Read data from the first text file
-snp_ready <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_columns.txt", header = TRUE)
-# Read data from the second text file
-zmm_ready <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/t_zmm.txt", header = FALSE)
-zmp_ready <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/t_zmp.txt", header = TRUE)
+## Merging data files
+* Now we need to merge the files snp_columns.txt with the transpose data for Maize (zmm.txt) and Teosinte (zmp.txt).
+* Files that we need are: transposed_zmm , transposed_zmp , snp_columns. We already read/opened them in previous chunks.
+
+```{r data merging}
+# Merging Maize file
 # Merge the two data frames by column (assuming they have the same number of rows)
-merged_data <- cbind(data1, data2)
+merged_snpzmm <- cbind(snp_columns, transposed_zmm)
 
 # Write the merged data to a new text file
-write.table(merged_data, file = "merged_file.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(merged_snpzmm, file = "merged_snpzmm.txt", row.names = FALSE)
+open_merged_zmm = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/merged_snpzmm.txt", header = TRUE)
+
+# Merging Teosinte file
+merged_snpzmp <- cbind(snp_columns, transposed_zmp)
+write.table(merged_snpzmp, file = "merged_snpzmp.txt", row.names = FALSE)
+open_merged_zmp = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/merged_snpzmp.txt", header = TRUE)
+```
+
+Right now we count with a merged file organized as we need it according to the assignment instructions: 
+column 1 = SNP-ID
+column 2 = Chromosome
+column 3 = Position
+column 4:978 = genotype 
+
+## Creating the files for the assignment:
+
+The assignment is requesting us to create the following files:
+### Maize files
+#### 1. 10 files (1 for each chromosome) with SNPs ordered based on increasing position values and with missing data encoded by this symbol: ?
+
+* The data is naturally encoded ? for missing data.
+* For these files we need to order the SNP_ID according to Position in increasing order.
+* The Position column contains non-numerical values (unknown, multiple and empty) which will interfere when trying to order the data based on increasing/decreasing values. Therefore, I am taking those values out and creating a clean version (num_open_merged_zmm), which will be used to obtain the file that we need. It uses the grepl() function to identify rows where the Position column consists entirely of digits.
+* This chunk first converts the Position column of open_merged_zmm dataframe to numeric, then converts it to numeric, later it orders it based on the values of the Position column, and finally prints the ordered numeric values.
+* In order to check if the ordering worked, we need to make sure our data is numeric, that is why I used twice the as.numeric command. 
+* Finally, We can check if the data is organized in increasing Position (column 3) by converting the matrix array into a data frame (if needed) and printing a TRUE result if the data is actually increasing. Result printed TRUE, meaning it is increasing.
+
+```{r increasing position}
+# Let's extract the non-numerical values from the 'Position' column 
+num_open_merged_zmm <- open_merged_zmm[grepl("^\\d+$", open_merged_zmm$Position), ]
+
+# Convert 'Position' column into numeric
+convnum_open_merged_zmm <- as.numeric(num_open_merged_zmm$Position)
+
+# Order the numeric values by the 'Position' column
+inc_zmm <- num_open_merged_zmm[order(convnum_open_merged_zmm), ]
+
+# Print the ordered dataframe
+print(inc_zmm)
+
+# Let's make sure the position column is numeric 
+num_inc_zmm <- as.numeric(inc_zmm$Position)
+
+# Check if the 'Position' column is in ascending order
+is_ordered <- all(diff(num_inc_zmm) >= 0)
+
+# Print the result
+print(is_ordered)
+
+```
+
+* We now need to create 1 file for each chromosome (1:10) for the organized file. We can do that with a for loop command that will store automatically the .txt files for the corresponding chromosome. 
+
+```{r chromosome loop}
+
+# Get unique chromosome numbers
+chromosomeszmm <- unique(inc_zmm$Chromosome)
+
+# Loop through each chromosome
+for (chr in chromosomeszmm) {
+  # Filter data for the current chromosome
+  chr_data <- inc_zmm[inc_zmm$Chromosome == chr, ]
+  
+  # Write the filtered data to a separate file
+  file_name <- paste0("maize_increasing_chr_", chr, ".txt")
+  write.table(chr_data, file = file_name, sep = "\t", quote = FALSE, row.names = FALSE)
+}
+
+# If you want to check the files you can use
+maize_inc_1 = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/maize_increasing_chr_1.txt", header = TRUE)
 
 ```
 
 
+#### 2. 10 files (1 for each chromosome) with SNPs ordered based on decreasing position values and with missing data encoded by this symbol: -
+* For these files we need to order the SNP_ID according to Position in decreasing order. The column Position contains non-numeric values (unkwnon and multiple), thus we can not use the unary operator - (negation). But we can convert the non-numeric values into numeric.
+
+* When converting the non-numeric values to numeric we get the warning that "NAs introduced by coercion", meaning that some of the values were not able to be converted, then R treats them like missing values (NA). If we wish to expand our data processing, it would be ideal to extract the special values from the Position column (unknown, multiple and empty) before ordering data, and store it in a different file. But for this assignment, I am keeping all the values together, but keeping in mind the warning of NAs coercion.
+
+```{r chromosome loop}
+# Order data in decreasing order
+
+# Order the data frame by the specific column in decreasing order
+dec_zmm <- open_merged_zmm[order(-as.numeric(open_merged_zmm$Position)), ]
+write.table(dec_zmm, file = "dec_snpzmm.txt", row.names = FALSE)
+open_dec_zmm = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/dec_snpzmm.txt", header = TRUE)
+
+# Convert the Position column to numeric
+numeric_dec_zmm <- suppressWarnings(as.numeric(dec_zmm$Position))
+
+# Filter out NA values (non-numeric)
+numeric_positions <- numeric_positions[!is.na(numeric_positions)]
+
+# Check if the numeric_positions vector is increasing
+is_increasing2 <- all(diff(numeric_positions) >= 0)
+
+# Convert the Position column to numeric
+numeric_dec_zmm <- suppressWarnings(as.numeric(open_merged_zmm$Position))
+
+# Order the numeric values in descending order
+dec_zmm <- numeric_dec_zmm[order(-numeric_dec_zmm$Position)]
+
+# Convert the Position column to numeric
+numeric_dec_zmm <- suppressWarnings(as.numeric(open_merged_zmm$Position))
+
+# Order the numeric values in descending order
+dec_zmm <- numeric_dec_zmm[order(-numeric_dec_zmm)]
+
+
+```
+
+* Again, we can check if the column is ordered in increasing value. For this file it is FALSE, meaning not ordered in increasing order.
+```{r increasing position}
+# Check if data is organized in increasing order by column 3 (Position)
+is_increasing2 <- all(diff(dec_zmm$Position) >= 0)
+# Print the result
+print(is_increasing2)
+# Check if the Position column in dec_zmm is increasing
+is_increasing2 <- all(diff(dec_zmm$Position) >= 0)
+
+```
+
+
+* For these files we need to change the encoded symbol ?/? for -/-.
+* For these files we need to create 1 file for each chromosome (1:10), as we did previously.
