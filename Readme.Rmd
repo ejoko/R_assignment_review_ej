@@ -6,7 +6,9 @@ output:
   html_document: default
   pdf_document: default
 ---
-# Note for reviewers: please make sure to change the location pathway to your own pathway.
+# Note for reviewers: 
+Please make sure to change the location pathway to your own pathway.
+The created_files folder contain all created files in this R project in case you need them.
 
 # Part 1. Data inspection
 
