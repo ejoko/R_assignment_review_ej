@@ -2,8 +2,11 @@
 title: "Readme"
 author: "Manuela Chaves"
 date: "2024-03-05"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
+# Note for reviewers: please make sure to change the location pathway to your own pathway.
 
 # Part 1. Data inspection
 
@@ -178,6 +181,7 @@ column 4:978 = genotype
 ## Creating the files for the assignment:
 
 The assignment is requesting us to create the following files:
+
 ### Maize files
 #### 1. 10 files (1 for each chromosome) with SNPs ordered based on increasing position values and with missing data encoded by this symbol: ?
 
@@ -191,6 +195,9 @@ The assignment is requesting us to create the following files:
 ```{r increasing position}
 # Let's extract the non-numerical values from the 'Position' column 
 num_open_merged_zmm <- open_merged_zmm[grepl("^\\d+$", open_merged_zmm$Position), ]
+
+# Save this file
+write.table(num_open_merged_zmm, file = "ready_zmm.txt", row.names = FALSE)
 
 # Convert 'Position' column into numeric
 convnum_open_merged_zmm <- as.numeric(num_open_merged_zmm$Position)
@@ -230,59 +237,362 @@ for (chr in chromosomeszmm) {
 }
 
 # If you want to check the files you can use
-maize_inc_1 = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/maize_increasing_chr_1.txt", header = TRUE)
+#maize_inc_1 = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/maize_increasing_chr_1.txt", header = TRUE)
 
 ```
 
 
 #### 2. 10 files (1 for each chromosome) with SNPs ordered based on decreasing position values and with missing data encoded by this symbol: -
-* For these files we need to order the SNP_ID according to Position in decreasing order. The column Position contains non-numeric values (unkwnon and multiple), thus we can not use the unary operator - (negation). But we can convert the non-numeric values into numeric.
+* For these files we need to order the SNP_ID according to Position in decreasing order. We can use the numeric clean file that we got in the previous item (convnum_open_merged_zmm).
+* Another reason why we convert the non-numeric values to numeric is that we could not use the unary operator - (negation) on the data. But once the data is converted to numeric there is no problem.
+* When checking for decreasing order, we get FALSE, meaning the order is not ascending.
 
-* When converting the non-numeric values to numeric we get the warning that "NAs introduced by coercion", meaning that some of the values were not able to be converted, then R treats them like missing values (NA). If we wish to expand our data processing, it would be ideal to extract the special values from the Position column (unknown, multiple and empty) before ordering data, and store it in a different file. But for this assignment, I am keeping all the values together, but keeping in mind the warning of NAs coercion.
+```{r decreasing position}
+# Order the original data frame by the numeric values in 'Position' column in decreasing order
+dec_zmm <- num_open_merged_zmm[order(-convnum_open_merged_zmm), ]
+
+# Let's make sure the position column is numeric 
+num_dec_zmm <- as.numeric(dec_zmm$Position)
+
+# Check if the 'Position' column is in decreasing order
+is_ordered_dec <- all(diff(num_dec_zmm) >= 0)
+
+# Print the result
+print(is_ordered_dec)
+
+```
+
+* Now we need to change the encoded symbol ?/? for -/-.We can do it with lapply command. However, this transforms the data into a list and we need to convert back to data frame. 
+* Then we can create 1 file for each chromosome (1:10) for the organized file as we did previously.
+```{r replace symbols}
+# Using lapply to replace "?" with "-" for the entire dataframe
+encoded_dec_zmm <- lapply(dec_zmm, function(x) gsub("\\?", "-", x))
+
+# Convert the list back to a dataframe
+encoded_dec_zmm_df <- as.data.frame(encoded_dec_zmm)
+
+# Now proceed with writing data to files for each chromosome
+# Get unique chromosome numbers
+chromosomeszmm_dec <- unique(encoded_dec_zmm_df$Chromosome)
+
+# Loop through each chromosome
+for (chr in chromosomeszmm_dec) {
+  chr_data <- encoded_dec_zmm_df[encoded_dec_zmm_df$Chromosome == chr, ]
+  file_name <- paste0("maize_decreasing_chr_", chr, ".txt")
+  write.table(chr_data, file = file_name, sep = "\t", quote = FALSE, row.names = FALSE)
+}
+
+# If you want to check the files you can use
+# maize_dec_1 = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/maize_decreasing_chr_1.txt", header = TRUE)
+
+```
+
+### Teosinte files
+#### 3. 10 files (1 for each chromosome) with SNPs ordered based on increasing position values and with missing data encoded by this symbol: ?
+
+* For these files we just need to replace the commands we used for item 1 with the respective data from Teosinte (zmp)
+* When checking for increasing order result is TRUE.
+* As a reminder, the data is naturally encoded with "?" for missing values. 
+
+```{r increasing order}
+# Let's extract the non-numerical values from the 'Position' column 
+num_open_merged_zmp <- open_merged_zmp[grepl("^\\d+$", open_merged_zmp$Position), ]
+
+# Save this file
+write.table(num_open_merged_zmp, file = "ready_zmp.txt", row.names = FALSE)
+
+# Convert 'Position' column into numeric
+convnum_open_merged_zmp <- as.numeric(num_open_merged_zmp$Position)
+
+# Order the numeric values by the 'Position' column
+inc_zmp <- num_open_merged_zmp[order(convnum_open_merged_zmp), ]
+
+# Print the ordered dataframe
+print(inc_zmp)
+
+# Let's make sure the position column is numeric 
+num_inc_zmp <- as.numeric(inc_zmp$Position)
+
+# Check if the 'Position' column is in ascending order
+is_ordered <- all(diff(num_inc_zmp) >= 0)
+
+# Print the result
+print(is_ordered)
+
+```
 
 ```{r chromosome loop}
-# Order data in decreasing order
 
-# Order the data frame by the specific column in decreasing order
-dec_zmm <- open_merged_zmm[order(-as.numeric(open_merged_zmm$Position)), ]
-write.table(dec_zmm, file = "dec_snpzmm.txt", row.names = FALSE)
-open_dec_zmm = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/dec_snpzmm.txt", header = TRUE)
+# Get unique chromosome numbers
+chromosomeszmp <- unique(inc_zmp$Chromosome)
 
-# Convert the Position column to numeric
-numeric_dec_zmm <- suppressWarnings(as.numeric(dec_zmm$Position))
+# Loop through each chromosome
+for (chr in chromosomeszmp) {
+  # Filter data for the current chromosome
+  chr_data <- inc_zmp[inc_zmp$Chromosome == chr, ]
+  
+  # Write the filtered data to a separate file
+  file_name <- paste0("teosinte_increasing_chr_", chr, ".txt")
+  write.table(chr_data, file = file_name, sep = "\t", quote = FALSE, row.names = FALSE)
+}
 
-# Filter out NA values (non-numeric)
-numeric_positions <- numeric_positions[!is.na(numeric_positions)]
-
-# Check if the numeric_positions vector is increasing
-is_increasing2 <- all(diff(numeric_positions) >= 0)
-
-# Convert the Position column to numeric
-numeric_dec_zmm <- suppressWarnings(as.numeric(open_merged_zmm$Position))
-
-# Order the numeric values in descending order
-dec_zmm <- numeric_dec_zmm[order(-numeric_dec_zmm$Position)]
-
-# Convert the Position column to numeric
-numeric_dec_zmm <- suppressWarnings(as.numeric(open_merged_zmm$Position))
-
-# Order the numeric values in descending order
-dec_zmm <- numeric_dec_zmm[order(-numeric_dec_zmm)]
-
+# If you want to check the files you can use
+# teosinte_inc_1 = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/teosinte_increasing_chr_1.txt", header = TRUE)
 
 ```
 
-* Again, we can check if the column is ordered in increasing value. For this file it is FALSE, meaning not ordered in increasing order.
-```{r increasing position}
-# Check if data is organized in increasing order by column 3 (Position)
-is_increasing2 <- all(diff(dec_zmm$Position) >= 0)
+#### 4. 10 files (1 for each chromosome) with SNPs ordered based on decreasing position values and with missing data encoded by this symbol: -
+* For these files we just need to replace the commands we used for item 2 with the respective data from Teosinte (zmp)
+* When checking for increasing order result is FALSE.
+
+```{r decreasing position}
+# Order the original data frame by the numeric values in 'Position' column in decreasing order
+dec_zmp <- num_open_merged_zmp[order(-convnum_open_merged_zmp), ]
+
+# Let's make sure the position column is numeric 
+num_dec_zmp <- as.numeric(dec_zmp$Position)
+
+# Check if the 'Position' column is in decreasing order
+is_ordered_dec <- all(diff(num_dec_zmp) >= 0)
+
 # Print the result
-print(is_increasing2)
-# Check if the Position column in dec_zmm is increasing
-is_increasing2 <- all(diff(dec_zmm$Position) >= 0)
+print(is_ordered_dec)
 
 ```
 
+```{r chromosome loop}
+# Using lapply to replace "?" with "-" for the entire dataframe
+encoded_dec_zmp <- lapply(dec_zmp, function(x) gsub("\\?", "-", x))
 
-* For these files we need to change the encoded symbol ?/? for -/-.
-* For these files we need to create 1 file for each chromosome (1:10), as we did previously.
+# Convert the list back to a dataframe
+encoded_dec_zmp_df <- as.data.frame(encoded_dec_zmp)
+
+# Now proceed with writing data to files for each chromosome
+# Get unique chromosome numbers
+chromosomeszmp_dec <- unique(encoded_dec_zmp_df$Chromosome)
+
+# Loop through each chromosome
+for (chr in chromosomeszmp_dec) {
+  chr_data <- encoded_dec_zmp_df[encoded_dec_zmp_df$Chromosome == chr, ]
+  file_name <- paste0("teosinte_decreasing_chr_", chr, ".txt")
+  write.table(chr_data, file = file_name, sep = "\t", quote = FALSE, row.names = FALSE)
+}
+
+# If you want to check the files you can use
+# teosinte_dec_1 = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/teosinte_decreasing_chr_1.txt", header = TRUE)
+
+```
+
+# Conclusion:
+We have succesfully process our 40 files.
+
+# Part 3. Data visualization
+
+For this part we need to install some packages of interest
+```{r install packages}
+# Load required libraries
+install.packages("ggplot2")
+install.packages("tidyverse")
+install.packages("dplyr")
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+```
+
+## SNPs per chromosome
+### Questions: 
+
+a. What is the distribution of SNPs on and accross chromosomes?
+
+First, open the files where we have all chromosomes per group but without the special positions (unknown, multiple and empty). Keep in mind these files are not ordered.
+```{r read files}
+ready_zmm = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/ready_zmm.txt", header = TRUE)
+ready_zmp = read.table("C:/Users/mchavesm/Box/Rass/R_assignment/ready_zmp.txt", header = TRUE)
+```
+
+Second, count the SNPs present in both Maize and Teosinte groups in each chromosome
+```{r snp count}
+zmm_counts <- ready_zmm %>% count(Chromosome, sort = TRUE)
+zmp_counts <- ready_zmp %>% count(Chromosome, sort = TRUE)
+
+```
+
+Now, create the distribution plot. 
+
+```{r snp count}
+
+# Maize
+ggplot() + geom_col(data = zmm_counts, mapping = aes(x=Chromosome, y=n)) + labs(x = "Chromosome", y = "Number of SNPs", fill = "Chromosome")
+
+# Teosinte
+ggplot() + geom_col(data = zmp_counts, mapping = aes(x=Chromosome, y=n)) + labs(x = "Chromosome", y = "Number of SNPs", fill = "Chromosome")
+```
+b. Are there more SNP positions in maize or teosinte individuals?
+
+Visually, both Maize and Teosinte groups contain the same amount of SNPs in their chromosomes.
+
+## Missing data and amount of heterozygosity
+### Questions:
+
+What is the proportion of homozygous and heterozygous sites as well as missing data in each sample and each group?
+
+To answer this question, first we need to search and count both homozygous and heterozygous sites in our files. We will create a new data frame for those sites, as well as for the missing data.
+
+```{r snp count}
+
+#Maize homozygous
+homozygous_zmm <- data.frame(rowSums(ready_zmm == "A/A" | ready_zmm =="T/T" | ready_zmm == "C/C" | ready_zmm == "G/G", na.rm = FALSE))
+
+#Maize heterozygous
+heterozygous_zmm <- data.frame(data.frame(rowSums(ready_zmm == "A/T" | ready_zmm =="A/C" | ready_zmm == "A/G" | ready_zmm == "T/A" | ready_zmm == "T/C" | ready_zmm == "T/G" | ready_zmm == "C/A" | ready_zmm == "C/T" | ready_zmm == "C/G" | ready_zmm == "G/A" | ready_zmm == "G/T" | ready_zmm == "G/C", na.rm = FALSE)))
+
+#Maize missing data
+missing_zmm <- data.frame(rowSums(ready_zmm == "?/?", na.rm = FALSE))
+
+#Teosinte homozygous
+homozygous_zmp <- data.frame(rowSums(ready_zmp == "A/A" | ready_zmp =="T/T" | ready_zmp == "C/C" | ready_zmp == "G/G", na.rm = FALSE))
+
+#Teosinte heterozygous
+heterozygous_zmp <- data.frame(data.frame(rowSums(ready_zmp == "A/T" | ready_zmp =="A/C" | ready_zmp == "A/G" | ready_zmp == "T/A" | ready_zmp == "T/C" | ready_zmp == "T/G" | ready_zmp == "C/A" | ready_zmp == "C/T" | ready_zmp == "C/G" | ready_zmp == "G/A" | ready_zmp == "G/T" | ready_zmp == "G/C", na.rm = FALSE)))
+
+#Teosintemissing data
+missing_zmp <- data.frame(rowSums(ready_zmp == "?/?", na.rm = FALSE))
+
+```
+
+Then, generate the proportion of homozygous/heterozygous for each group.
+```{r snp count}
+
+# Calculate proportion homozygous/heterozygous
+p_homo_hetero <- data.frame(homozygous_zmm/heterozygous_zmm)
+
+#remove infinite where division by zero.
+p_homo_hetero[sapply(p_homo_hetero, is.infinite)] <- NA
+
+#ADD SNP number due to needing numerical data to actually graph.
+SNP_number <- c(1:939)
+
+#Combine all data into one dataframe and then rename the columns as needed.
+zmm_proportion <- data.frame(SNP_number, ready_zmm[1:3], homozygous_zmm, heterozygous_zmm, missing_zmm, p_homo_hetero)
+
+colnames(zmm_proportion)[1] <- 'SNP_number'
+colnames(zmm_proportion)[4] <- 'homozygous'
+colnames(zmm_proportion)[5] <- 'heterozygous'
+colnames(zmm_proportion)[6] <- 'missing'
+colnames(zmm_proportion)[7] <- 'homozygous/heterozygous'
+
+# Same for Teosinte
+# Calculate proportion homozygous/heterozygous
+p_homo_hetero_zmp <- data.frame(homozygous_zmp/heterozygous_zmp)
+
+#remove infinite where division by zero.
+p_homo_hetero_zmp[sapply(p_homo_hetero_zmp, is.infinite)] <- NA
+
+#ADD SNP number due to needing numerical data to actually graph.
+SNP_number_zmp <- c(1:939)
+
+#Combine all data into one dataframe and then rename the columns as needed.
+zmp_proportion <- data.frame(SNP_number_zmp, ready_zmp[1:3], homozygous_zmp, heterozygous_zmp, missing_zmp, p_homo_hetero_zmp)
+
+colnames(zmp_proportion)[1] <- 'SNP_number'
+colnames(zmp_proportion)[4] <- 'homozygous'
+colnames(zmp_proportion)[5] <- 'heterozygous'
+colnames(zmp_proportion)[6] <- 'missing'
+colnames(zmp_proportion)[7] <- 'homozygous/heterozygous'
+
+```
+
+Now, graphic the homozygous, heterozygous, missing and proportion of sites
+```{r snp count}
+# Maize
+#graph homozygous
+ggplot() + geom_bar(zmm_proportion, mapping = aes(x= SNP_number, y= homozygous), stat = "identity") + scale_x_continuous() + labs(title = "Amount of Homozygous SNP Sites in Maize", x = "SNP ID", y = "Amount of Homozygous SNPs")
+
+#graph heterozygous maize
+ggplot() + geom_bar(zmm_proportion, mapping = aes(x= SNP_number, y= heterozygous), stat = "identity") + scale_x_continuous() + labs(title = "Amount of Heterozygous SNP Sites in Maize", x = "SNP ID", y = "Amount of Heterozygous SNPs")
+
+#graph missing for maize
+ggplot() + geom_bar(zmm_proportion, mapping = aes(x= SNP_number, y= missing), stat = "identity") + scale_x_continuous() + labs(title = "Amount of Missing SNP Sites in Maize", x = "SNP ID", y = "Amount of Missing SNPs")
+
+#plot ratio maize
+ggplot() + geom_bar(zmm_proportion, mapping = aes(x= SNP_number, y= "homozygous/heterozysgous"), stat = "identity") + scale_x_continuous() + labs(title = "Proportion of homozygous and heterozygous in Maize", x = "SNP ID", y = "Proportion of homozygous and heterozygous")
+
+
+# Teosinte
+#graph homozygous
+ggplot() + geom_bar(zmp_proportion, mapping = aes(x= SNP_number, y= homozygous), stat = "identity") + scale_x_continuous() + labs(title = "Amount of Homozygous SNP Sites in Maize", x = "SNP ID", y = "Amount of Homozygous SNPs")
+
+#graph heterozygous maize
+ggplot() + geom_bar(zmp_proportion, mapping = aes(x= SNP_number, y= heterozygous), stat = "identity") + scale_x_continuous() + labs(title = "Amount of Heterozygous SNP Sites in Maize", x = "SNP ID", y = "Amount of Heterozygous SNPs")
+
+#graph missing for maize
+ggplot() + geom_bar(zmp_proportion, mapping = aes(x= SNP_number, y= missing), stat = "identity") + scale_x_continuous() + labs(title = "Amount of Missing SNP Sites in Maize", x = "SNP ID", y = "Amount of Missing SNPs")
+
+#plot ratio maize
+ggplot() + geom_bar(zmp_proportion, mapping = aes(x= SNP_number, y= "homozygous/heterozysgous"), stat = "identity") + scale_x_continuous() + labs(title = "Proportion of homozygous and heterozygous in Teosinte", x = "SNP ID", y = "Proportion of homozygous and heterozygous")
+
+```
+
+# My visualization
+
+For my own visualization I would like to know if there are repeated SNPs in the different positions. For that, I will look at the presence of duplicate SNPs.
+
+```{r visualization}
+# Maize
+# Check for duplicated SNP numbers
+duplicated_SNPs_zmm <- zmm_proportion$SNP_number[duplicated(zmm_proportion$SNP_number)]
+
+# Print or inspect the duplicated SNP numbers
+if (length(duplicated_SNPs_zmm) > 0) {
+  print(paste("Duplicated SNP numbers:", toString(duplicated_SNPs_zmm)))
+} else {
+  print("No duplicated SNP numbers found.")
+}
+library(ggplot2)
+
+# Count the frequency of each SNP number
+snp_frequency <- table(zmm_proportion$SNP_number)
+
+# Create a data frame for plotting
+snp_plot_data <- data.frame(SNP_number = as.numeric(names(snp_frequency)),
+                            Frequency = as.numeric(snp_frequency))
+
+# Create a scatter plot
+ggplot(snp_plot_data, aes(x = Frequency, y = SNP_number)) +
+  geom_point(size = 2) +
+  labs(title = "Frequency of SNP Numbers",
+       x = "Frequency",
+       y = "SNP Number") +
+  theme_minimal()
+
+```
+
+```{r visualization}
+# Teosinte
+# Check for duplicated SNP numbers
+duplicated_SNPs_zmp <- zmp_proportion$SNP_number_zmp[duplicated(zmp_proportion$SNP_number_zmp)]
+
+# Print or inspect the duplicated SNP numbers
+if (length(duplicated_SNPs_zmp) > 0) {
+  print(paste("Duplicated SNP numbers:", toString(duplicated_SNPs_zmp)))
+} else {
+  print("No duplicated SNP numbers found.")
+}
+library(ggplot2)
+
+# Count the frequency of each SNP number
+snp_frequency <- table(zmp_proportion$SNP_number_zmp)
+
+# Create a data frame for plotting
+snp_plot_data_zmp <- data.frame(SNP_number_zmp = as.numeric(names(snp_frequency)),
+                            Frequency = as.numeric(snp_frequency))
+
+# Create a scatter plot
+ggplot(snp_plot_data, aes(x = Frequency, y = SNP_number_zmp)) +
+  geom_point(size = 2) +
+  labs(title = "Frequency of SNP Numbers",
+       x = "Frequency",
+       y = "SNP Number") +
+  theme_minimal()
+
+```
