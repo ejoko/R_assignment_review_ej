@@ -1,0 +1,83 @@
+---
+title: "Manuela_review_EJ"
+author: "ESTHER JOKODOLA"
+date: "2024-03-18"
+output: html_document
+---
+
+{r read txt}
+install.packages("readr")
+library(readr)
+fang <- "C:/Users/mchavesm/Box/Rass/R_assignment/fang_et_al_genotypes.txt", header = TRUE"")
+snp <- read.table("C:/Users/mchavesm/Box/Rass/R_assignment/snp_position.txt", header = TRUE, sep = "\t")
+print(fang)
+print(snp)
+
+##I will suggest you read the files from a central location e.g from the Course folder for easy running of the code instead of running it from your box folder.
+
+
+Attributes of the Fang et al & SNP files
+
+* The following chunk shows the commands I used to inspect the data:
+
+{r inspection}
+Inspecting the Fang file
+
+dim(fang) #dimensions of the file
+str(fang) #structure of the file
+summary(fang) # statistic summary 
+names(fang) #shows names of all columns in file
+head(fang) #shows first lines of file
+tail(fang) #shows last lines of file
+na_fang <- grepl("?/?", fang, ignore.case = TRUE) #check for missing values
+
+Inspecting the SNP file
+dim(snp)
+str(snp)
+summary(snp)
+names(snp)
+head(snp)
+tail(snp)
+na_snp <- grepl("NA", snp, ignore.case = TRUE) 
+
+Assessing inspection
+1. Fang:
+* Number of rows = 2782 and columns = 986
+* Data structure shows character type (col_character). 
+* The summary command is not very useful for the Fang file since it recognizes the data as characters.
+* Tail and head will display part of the data nicely organized in a printed data frame (tibble)
+* We can check the names of all the columns in the file with "names()"
+* To check for missing values in the Fang file we could use $ colSums(is.na(fang)), which will return a logical matrix of the same dimensions of the file, and sums the TRUE values in each column, TRUE meaning NA. This command returns all 0, meaning all FALSE (not NA). However, we know from the previous UNIX assignment, that the missing data in Fang is delimited as "?/?", in which case we can use na_fang <- grepl("?/?", fang, ignore.case = TRUE), which will create a data frame with insensitive search, meaning any combination of the missing value. This time we get that there is at least 1 missing data in every column (all TRUE values).
+* From this genotype data, I am interested in knowing how many columns have our genotypes of interest (ZMM for maize and ZMP for Teosinte), then I am using the following command lines, we get 1573 rows with the group ZMM and 975 rows with the group ZMP.
+
+
+2. SNP:
+* Number of rows = 983 and columns = 15
+* Data structure includes characters (col_character) and numeric (col_double) types.
+* Summary shows statistics for numeric columns.
+* Tail and head will display part of the data nicely organized in a printed data frame (tibble)
+* We can check the names of all the columns in the file with names()
+* Missing values in the SNP file are delimited by NA, in this case we can use the colSums(is.na(snp)) command, and it will return quickly the count of missing data and the column. However this command is sensitive, meaning that if there is any NA value in different notation, the command will not count it. Thus, we can use the na_snp <- grepl("NA", snp, ignore.case = TRUE) to be sure of the missing data results.
+
+
+##There is repetition of information here, I will suggest you make it more compact and good summary of both files.
+
+{r inspection}
+Extract the specific column
+column_3 <- data[, 3]
+Count the number of rows that contain the prefix "ZMM" or "ZMP"
+count_ZMM <- sum(grepl("^ZMM", column_3))
+count_ZMP <- sum(grepl("^ZMP", column_3))
+Print the result
+print(count_ZMM)
+print(count_ZMP)
+
+
+##There is an error in this chunk of code " Error in data[, 3] : object of type 'closure' is not subsettable"
+To resolve this, you can  check where the variable data is defined and how it is being used in your code. Make sure that data is assigned a data frame or a matrix before you try to subset it.
+
+##I cannot run most of the code because you have all your files linked to your box folder which I do not have access to.This has prevented me from having a look at your plots and give feedback on those. I cannot run your code from Transposing Data section. You can consider changing the location to a general loacion for future accessibility
+
+##I will also suggest you load all the required libararies from the beginning
+##Overall, you have good description of your codes and what they do. I'll suggest to make them a bit more summarized to avoid redundancy.
+
